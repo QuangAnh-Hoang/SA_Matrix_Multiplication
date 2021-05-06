@@ -1,0 +1,3 @@
+projectDir = '"~/simulation"
+designInfo = '("Systolic_Array" "inexact_adder1" "schematic" "spectre")
+descriptionText = "None"
