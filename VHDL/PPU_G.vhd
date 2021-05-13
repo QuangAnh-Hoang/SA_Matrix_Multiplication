@@ -31,14 +31,14 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity PPU is
+entity PPU_G is
     port(
-        i_ci, i_dj, i_carry, i_sum: in std_logic;
-        o_ci, o_dj, o_carry, o_sum: out std_logic
+        i_ci, i_dj, i_sum, i_carry: in std_logic;
+        o_ci, o_dj, o_sum, o_carry: out std_logic
     );
-end PPU;
+end PPU_G;
 
-architecture Structural of PPU is
+architecture Structural of PPU_G is
 
 component FA
     port(
@@ -47,17 +47,17 @@ component FA
     );
 end component;
 
-signal C_and_D: std_logic;
+signal C_nand_D: std_logic;
 
 begin
 
 o_ci <= i_ci;
 o_dj <= i_dj;
-C_and_D <= i_ci and i_dj;
+C_nand_D <= i_ci nand i_dj;
 
 ADDER: FA port map (
     i_a => i_sum,
-    i_b => C_and_D,
+    i_b => C_nand_D,
     i_carry => i_carry,
     o_sum => o_sum,
     o_carry => o_carry
