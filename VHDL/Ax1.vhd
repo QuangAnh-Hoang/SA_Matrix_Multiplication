@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/03/2021 09:07:37 PM
+-- Create Date: 05/17/2021 06:37:22 PM
 -- Design Name: 
 -- Module Name: Ax1 - Structural
 -- Project Name: 
@@ -32,139 +32,144 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity Ax1 is
+    generic(n: natural:= 8);
     port(
-        i_c, i_d: in std_logic_vector(7 downto 0);
-        o_eout: out std_logic_vector(15 downto 0)
+        i_a, i_b: in std_logic_vector(n-1 downto 0);
+        o_eout: out std_logic_vector(2*n-1 downto 0);
+        o_carry: out std_logic
     );
 end Ax1;
 
 architecture Structural of Ax1 is
 
--- Components --
-component PPU is
+-- components --
+component QTR_MXU_X is
+    generic(a: natural:= 3;
+            n: natural:= 4);
     port(
-        i_ci, i_dj, i_carry, i_sum: in std_logic;
-        o_ci, o_dj, o_carry, o_sum: out std_logic
+        i_c, i_d: in std_logic_vector(n-1 downto 0);
+        o_eout: out std_logic_vector(2*n-1 downto 0)
     );
 end component;
 
--- Variables --
-type two_d_array is array (natural range <>, natural range <>) of std_logic; 
-signal ci, di, psi, cri: two_d_array(7 downto 0, 7 downto 0);
-signal p: std_logic_vector(15 downto 0);
-signal cout: std_logic;
+component QTR_MXU is
+    generic(n: natural:= 4);
+    port(
+        i_c, i_d: in std_logic_vector(n-1 downto 0);
+        o_eout: out std_logic_vector(2*n-1 downto 0)
+    );
+end component;
+
+component QTR_MXU_U is
+    generic(n: natural:= 4);
+    port(
+        i_c, i_d: in std_logic_vector(n-1 downto 0);
+        o_eout: out std_logic_vector(2*n-1 downto 0)
+    );
+end component;
+
+component CLA is
+    generic(n: natural:= 8);
+    port(
+        i_a, i_b: in std_logic_vector(n-1 downto 0);
+        o_sum: out std_logic_vector(n-1 downto 0);
+        o_carry: out std_logic
+    );
+end component;
+
+component FA is
+    port(
+        i_a, i_b, i_carry: in std_logic;
+        o_sum, o_carry: out std_logic
+    );
+end component;
+
+-- signals --
+signal o_quad1, o_quad2, o_quad3, o_quad4: std_logic_vector(n-1 downto 0);
+signal temp_oper: std_logic_vector(n-1 downto 0);
+--signal o_carry1: std_logic;
+signal o_s, o_c, o_sum : std_logic_vector(3*n/2-1 downto 0);
 
 begin
 
-INIT_C: for j in 0 to 7 generate
-    ci(0, j) <= i_c(j);
-    psi(0, j) <= '0';
-end generate INIT_C;
+QUAD1: QTR_MXU_X 
+    generic map (a => 3, n => 4)
+    port map (
+        i_c => i_a(n/2-1 downto 0),
+        i_d => i_b(n/2-1 downto 0),
+        o_eout => o_quad1
+    );
 
-INIT_D: for i in 0 to 7 generate
-    di(i, 0) <= i_d(i);
-    cri(1, 0) <= '0';
-end generate INIT_D;
+--QUAD1: QTR_MXU_U
+--    generic map (n => 4)
+--    port map (
+--        i_c => i_a(n/2-1 downto 0),
+--        i_d => i_b(n/2-1 downto 0),
+--        o_eout => o_quad1
+--    );
+    
+QUAD2: QTR_MXU_U 
+    generic map (n => 4)
+    port map (
+        i_c => i_a(n-1 downto n/2),
+        i_d => i_b(n/2-1 downto 0),
+        o_eout => o_quad2
+    );
 
-GY: for i in 0 to 7 generate
-    GX: for j in 0 to 7 generate 
+QUAD3: QTR_MXU_U
+    generic map (n => 4)
+    port map (
+        i_c => i_a(n-1 downto n/2),
+        i_d => i_b(n-1 downto n/2),
+        o_eout => o_quad3
+    );
+    
+QUAD4: QTR_MXU_U
+    generic map (n => 4)
+    port map (
+        i_c => i_a(n/2-1 downto 0),
+        i_d => i_b(n-1 downto n/2),
+        o_eout => o_quad4
+    );
 
-        G1: if i=0 and j<7 and j>0 generate
-            ci(i+1, j) <= ci(i, j);
-            di(i, j+1) <= di(i, j);
-            psi(i+1, j-1) <= ci(i, j) and di(i, j);
-        end generate G1;
+temp_oper <= o_quad3(n/2-1 downto 0) & o_quad1(n-1 downto n/2);
+
+ADDER: for i in 0 to 3*n/2-1 generate
+    ADD: if i < n generate
+        GEN_FA: FA 
+            port map (
+                i_a => o_quad2(i),
+                i_b => o_quad4(i),
+                i_carry => temp_oper(i),
+                o_sum => o_s(i),
+                o_carry => o_c(i+1)
+            );
+    end generate ADD;
+    
+    MSB_SUM: if i > n-1 generate
+        o_s(i) <= o_quad3(i-n/2);
+    end generate MSB_SUM;
+    
+    MSB_CARRY: if i > n generate
+        o_c(i) <= '0';
+    end generate MSB_CARRY;
+    
+    LSB_CARRY: if i = 0 generate
+        o_c(i) <= '0';
+    end generate LSB_CARRY;
         
-        ci(1, 0) <= ci(0, 0);
-        di(0, 1) <= di(0, 0);
-        p(0) <= ci(0, 0) and di(0, 0);
-        
-        ci(1, 7) <= ci(0, 7);
-        psi(1, 6) <= ci(0, 7) nand di(0, 7);
-        
-        G2: if i>0 and i<7 and j=0 generate
-            ELM: PPU port map (
-                i_ci => ci(i, j),
-                i_dj => di(i, j),
-                i_carry => cri(i, j),
-                i_sum => psi(i, j),
-                o_ci => ci(i+1, j),
-                o_dj => di(i, j+1),
-                o_carry => cri(i, j+1),
-                o_sum => p(i)
-            );
-        end generate G2;
-        
-        G3: if i=7 and j<7 generate
-            ELM: PPU port map (
-                i_ci => ci(i, j),
-                i_dj => di(i, j),
-                i_carry => cri(i, j),
-                i_sum => psi(i, j),
-                o_ci => open,
-                o_dj => di(i, j+1),
-                o_carry => cri(i, j+1),
-                o_sum => p(i+j)
-            );
-        end generate G3;
+end generate ADDER;
 
-        G4: if i<7 and i>0 and j<7 and j>0 generate
-            ELM: PPU port map (
-                i_ci => ci(i, j),
-                i_dj => di(i, j),
-                i_carry => cri(i, j),
-                i_sum => psi(i, j),
-                o_ci => ci(i+1, j),
-                o_dj => di(i, j+1),
-                o_carry => cri(i, j+1),
-                o_sum => psi(i+1, j-1)
-            );
-        end generate G4;
-
-        G5: if i=1 and j=7 generate
-            ELM: PPU port map (
-                i_ci => ci(i, j),
-                i_dj => di(i, j),
-                i_carry => cri(i, j),
-                i_sum => '1',
-                o_ci => ci(i+1, j),
-                o_dj => open,
-                o_carry => psi(i+1, j),
-                o_sum => psi(i+1, j-1)
-            );
-        end generate G5;
-
-        G6: if i>1 and i<7 and j=7 generate
-            ELM: PPU port map (
-                i_ci => ci(i, j),
-                i_dj => di(i, j),
-                i_carry => cri(i, j),
-                i_sum => psi(i, j),
-                o_ci => ci(i+1, j),
-                o_dj => open,
-                o_carry => psi(i+1, j),
-                o_sum => psi(i+1, j-1)
-            );
-        end generate G6;
-
-        G7: if i=7 and j=7 generate
-            ELM: PPU port map (
-                i_ci => ci(i, j),
-                i_dj => di(i, j),
-                i_carry => cri(i, j),
-                i_sum => psi(i, j),
-                o_ci => open,
-                o_dj => open,
-                o_carry => cout,
-                o_sum => p(i+j)
-            );
-        end generate G7;
-
-        p(15) <= cout xor '1';
-
-    end generate GX;
-end generate GY;
-
-o_eout <= p(15 downto 0);
+CL_ADDER: CLA
+    generic map (n => 12)
+    port map (
+        i_a => o_s,
+        i_b => o_c,
+        o_sum => o_sum,
+        o_carry => open
+    );
+    
+o_eout <= o_sum & o_quad1(n/2-1 downto 0);
+o_carry <= '0';
 
 end Structural;

@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 04/18/2021 10:28:27 PM
+-- Create Date: 05/10/2021 10:31:56 PM
 -- Design Name: 
--- Module Name: PPU - Structural
+-- Module Name: PPU_X - Structural
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -31,16 +31,23 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity PPU is
+entity PPU_X is
     port(
-        i_ci, i_dj, i_carry, i_sum: in std_logic;
-        o_ci, o_dj, o_carry, o_sum: out std_logic
+        i_ci, i_dj, i_sum, i_carry: in std_logic;
+        o_ci, o_dj, o_sum, o_carry: out std_logic
     );
-end PPU;
+end PPU_X;
 
-architecture Structural of PPU is
+architecture Structural of PPU_X is
 
-component FA
+component NFAx is
+    port(
+        i_a, i_b, i_carry: in std_logic;
+        o_sum, o_carry: out std_logic
+    );
+end component;
+
+component AXA3 is
     port(
         i_a, i_b, i_carry: in std_logic;
         o_sum, o_carry: out std_logic
@@ -55,7 +62,7 @@ o_ci <= i_ci;
 o_dj <= i_dj;
 C_and_D <= i_ci and i_dj;
 
-ADDER: FA port map (
+ADDER: AXA3 port map (
     i_a => i_sum,
     i_b => C_and_D,
     i_carry => i_carry,
