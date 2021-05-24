@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/10/2021 10:31:56 PM
+-- Create Date: 05/23/2021 05:22:11 PM
 -- Design Name: 
--- Module Name: PPU_X - Structural
+-- Module Name: AXA3 - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -31,43 +31,17 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity PPU_X is
-    port(
-        i_ci, i_dj, i_sum, i_carry: in std_logic;
-        o_ci, o_dj, o_sum, o_carry: out std_logic
-    );
-end PPU_X;
-
-architecture Structural of PPU_X is
-
-component NFAx is
+entity AXA3 is
     port(
         i_a, i_b, i_carry: in std_logic;
         o_sum, o_carry: out std_logic
     );
-end component;
+end AXA3;
 
-component AXA3 is
-    port(
-        i_a, i_b, i_carry: in std_logic;
-        o_sum, o_carry: out std_logic
-    );
-end component;
-
-signal C_and_D: std_logic;
+architecture Behavioral of AXA3 is
 
 begin
+o_sum <= (i_a xnor i_b) and i_carry;
+o_carry <= ((i_a xor i_b) and i_carry) or (i_a and i_b);
 
-o_ci <= i_ci;
-o_dj <= i_dj;
-C_and_D <= i_ci and i_dj;
-
-ADDER: AXA3 port map (
-    i_a => i_sum,
-    i_b => C_and_D,
-    i_carry => i_carry,
-    o_sum => o_sum,
-    o_carry => o_carry
-);
-
-end Structural;
+end Behavioral;

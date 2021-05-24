@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/10/2021 10:31:56 PM
+-- Create Date: 05/23/2021 07:08:58 PM
 -- Design Name: 
--- Module Name: PPU_X - Structural
+-- Module Name: DFF - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -31,43 +31,30 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity PPU_X is
+entity DFF is
     port(
-        i_ci, i_dj, i_sum, i_carry: in std_logic;
-        o_ci, o_dj, o_sum, o_carry: out std_logic
+        data_in: in std_logic;
+        w_en: in std_logic;
+        clk: in std_logic;
+        data_out: out std_logic
     );
-end PPU_X;
+end DFF;
 
-architecture Structural of PPU_X is
+architecture Behavioral of DFF is
 
-component NFAx is
-    port(
-        i_a, i_b, i_carry: in std_logic;
-        o_sum, o_carry: out std_logic
-    );
-end component;
-
-component AXA3 is
-    port(
-        i_a, i_b, i_carry: in std_logic;
-        o_sum, o_carry: out std_logic
-    );
-end component;
-
-signal C_and_D: std_logic;
+signal mem: std_logic := '0';
 
 begin
 
-o_ci <= i_ci;
-o_dj <= i_dj;
-C_and_D <= i_ci and i_dj;
+process(clk)
+begin
+    if clk'event and clk = '1' then
+        if w_en'event and w_en = '1' then
+            mem <= data_in;
+        else
+            data_out <= mem;
+        end if;
+    end if;
+end process;
 
-ADDER: AXA3 port map (
-    i_a => i_sum,
-    i_b => C_and_D,
-    i_carry => i_carry,
-    o_sum => o_sum,
-    o_carry => o_carry
-);
-
-end Structural;
+end Behavioral;
