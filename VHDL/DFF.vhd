@@ -49,7 +49,7 @@ begin
 process(clk)
 begin
     if clk'event and clk = '1' then
-        if w_en'event and w_en = '1' then
+        if w_en = '1' then
             mem <= data_in;
         else
             data_out <= mem;

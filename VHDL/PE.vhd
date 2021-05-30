@@ -41,7 +41,7 @@ entity PE is
         y_out: out std_logic_vector(2*n-1 downto 0);
         
         weight_en: in std_logic;
-        reg_en: in std_logic;
+        tristate_en: in std_logic;
         clk: in std_logic
     );
 end PE;
@@ -50,11 +50,11 @@ architecture Behavioral of PE is
 
 -- components --
 component Ax1 is
-    generic(n: natural:= 8);
+    generic(a: natural:= 3;
+            n: natural:= 8);
     port(
-        i_a, i_b: in std_logic_vector(n-1 downto 0);
-        o_eout: out std_logic_vector(2*n-1 downto 0);
-        o_carry: out std_logic
+        i_c, i_d: in std_logic_vector(n-1 downto 0);
+        o_eout: out std_logic_vector(2*n-1 downto 0)
     );
 end component;
 
@@ -94,21 +94,29 @@ WEIGHT_REG: REG
     );
 
 MULT: Ax1
-    generic map(n => n)
+    generic map(
+        a => 3,
+        n => n
+    )
     port map(
-        i_a => x_in, 
-        i_b => weight_tmp,
-        o_eout => mult_tmp,
-        o_carry => open
+        i_c => x_in, 
+        i_d => weight_tmp,
+        o_eout => mult_tmp
     );
     
---ADDER: CLA
---    generic map(n => n)
---    port(
---        i_a, i_b: in std_logic_vector(n-1 downto 0);
---        o_sum: out std_logic_vector(n-1 downto 0);
---        o_carry: out std_logic
---    );    
+ADDER: CLA
+    generic map(n => 2*n)
+    port map(
+        i_a => y_in, 
+        i_b => mult_tmp,
+        o_sum => adder_tmp,
+        o_carry => open
+    );
 
+TRISTATE_BUFFER: for i in 0 to 2*n-1 generate
+    y_out(i) <= adder_tmp(i) when (tristate_en = '1') else 'Z';
+end generate TRISTATE_BUFFER;
+
+x_out <= x_in;
 
 end Behavioral;
