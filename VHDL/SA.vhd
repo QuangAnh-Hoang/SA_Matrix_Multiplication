@@ -60,7 +60,8 @@ entity SA is
         xi: in bin_array_2_t;
         clk, ld: in std_logic;
         yo: out bin_array_out_t;
-        done: out std_logic
+        done: out std_logic;
+        reset: in std_logic
     );
 end SA;
 
@@ -133,15 +134,20 @@ end generate MAP_Y_OUT;
 process(clk, ld)
     variable counter: integer range 0 to 31;
 begin
-    if clk'event and clk='1' then
-        if ld='1' then
-            done <= '0';
-            counter := 1;
-        else
-            if counter <= MXU_H1+MXU_H2+1 then
-                counter := counter + 1;
+    if reset = '1' then
+        done <= '0';
+        counter := 0;
+    else 
+        if clk'event and clk='1' then
+            if ld='1' then
+                done <= '0';
+                counter := 0;
             else
-                done <= '1';
+                if counter <= MXU_H1+MXU_H2+1 then
+                    counter := counter + 1;
+                else
+                    done <= '1';
+                end if;
             end if;
         end if;
     end if;
