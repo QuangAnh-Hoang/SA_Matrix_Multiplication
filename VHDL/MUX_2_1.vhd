@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/23/2021 07:08:58 PM
+-- Create Date: 05/30/2021 04:31:52 PM
 -- Design Name: 
--- Module Name: DFF - Behavioral
+-- Module Name: MUX_2_1 - Structural
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -31,30 +31,19 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity DFF is
+entity MUX_2_1 is
+    generic(n: natural:= 16);
     port(
-        data_in: in std_logic;
-        w_en: in std_logic;
-        clk: in std_logic;
-        data_out: out std_logic
+        i_x, i_y: in std_logic_vector(n-1 downto 0);
+        sel: in std_logic;
+        o_z: out std_logic_vector(n-1 downto 0)
     );
-end DFF;
+end MUX_2_1;
 
-architecture Behavioral of DFF is
-
-signal mem: std_logic := '0';
+architecture Structural of MUX_2_1 is
 
 begin
 
-process(clk)
-begin
-    if clk'event and clk = '1' then
-        if w_en = '1' then
-            mem <= data_in;
-        end if;
-    end if;
-end process;
+o_z <= i_y when (sel = '1') else i_x;
 
-data_out <= mem;
-
-end Behavioral;
+end Structural;

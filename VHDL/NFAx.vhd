@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/23/2021 07:08:58 PM
+-- Create Date: 04/18/2021 10:21:11 PM
 -- Design Name: 
--- Module Name: DFF - Behavioral
+-- Module Name: NFAx - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -31,30 +31,20 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity DFF is
+entity NFAx is
     port(
-        data_in: in std_logic;
-        w_en: in std_logic;
-        clk: in std_logic;
-        data_out: out std_logic
+        i_a, i_b, i_carry: in std_logic;
+        o_sum, o_carry: out std_logic
     );
-end DFF;
+end NFAx;
 
-architecture Behavioral of DFF is
-
-signal mem: std_logic := '0';
+architecture Structural of NFAx is
+signal A_nand_B: std_logic;
 
 begin
 
-process(clk)
-begin
-    if clk'event and clk = '1' then
-        if w_en = '1' then
-            mem <= data_in;
-        end if;
-    end if;
-end process;
+A_nand_B <= i_a nand i_b;
+o_sum <= A_nand_B nand i_carry;
+o_carry <= A_nand_B nand (not i_carry);
 
-data_out <= mem;
-
-end Behavioral;
+end Structural;
